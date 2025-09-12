@@ -1,0 +1,79 @@
+### Go ###
+# Binaries for programs and plugins
+/*.exe
+/*.dll
+/*.so
+/*.dylib
+
+# Test binary, build outputs
+/*.test
+/_output/
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+coverage.out
+
+# vendor directory (uncomment if you want to keep vendor in VCS)
+vendor/
+
+### Build ###
+# If you use a build directory
+bin/
+build/
+
+### Dependency directories ###
+# Go modules
+Godeps/
+
+### Environment files ###
+# dotenv files
+.env
+.env.local
+.env.*.local
+
+### Logs and runtime files ###
+*.log
+*.pid
+*.seed
+
+### IDEs and editors ###
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sublime-project
+*.sublime-workspace
+
+### OS generated files ###
+Thumbs.db
+.DS_Store
+ehthumbs.db
+Icon?
+
+### Swagger / docs (generated) ###
+docs/swagger.json
+docs/swagger.yaml
+
+### Migrations / database files ###
+# ignore sqlite files or generated DB files
+*.db
+*.sqlite
+migrations/*.db
+
+### IDE / editor project files ###
+*.iml
+
+### Fiber / Web specific ###
+# compiled assets
+assets/dist/
+node_modules/
+
+### Misc ###
+# coverage
+coverage/
+.cache/
+
+# End of file
