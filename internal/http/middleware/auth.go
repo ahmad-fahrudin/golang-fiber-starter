@@ -19,22 +19,19 @@ type JWTClaims struct {
 func JWTMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Get the Authorization header
-		authHeader := c.Get("Authorization")
+		authHeader := strings.TrimSpace(c.Get("Authorization"))
 		if authHeader == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Missing authorization header",
 			})
 		}
 
-		// Check if it starts with "Bearer "
-		if !strings.HasPrefix(authHeader, "Bearer ") {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Invalid authorization header format",
-			})
+		tokenString := authHeader
+		// if it starts with "bearer " (case-insensitive) strip the prefix
+		lower := strings.ToLower(authHeader)
+		if strings.HasPrefix(lower, "bearer ") {
+			tokenString = strings.TrimSpace(authHeader[len("Bearer "):])
 		}
-
-		// Extract token
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 		// Parse and validate token
 		token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {

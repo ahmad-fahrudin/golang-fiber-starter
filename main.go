@@ -4,6 +4,10 @@
 // @host localhost:3000
 // @BasePath /api/v1
 // @schemes http
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer {your JWT token}" to authenticate.
 package main
 
 import (
@@ -89,7 +93,9 @@ func main() {
 	// Setup routes
 	routes.SetupRoutes(app, authHandler, userHandler)
 
-	// Swagger UI (serve at /swagger/index.html)
+	// Swagger UI (custom index serves persistAuthorization) and keep default for assets
+	app.Get("/swagger", handlers.SwaggerIndex)
+	app.Get("/swagger/index.html", handlers.SwaggerIndex)
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	// Start server
