@@ -5,6 +5,7 @@ import (
 
 	"golang-fiber-starter-kit/internal/model"
 	"golang-fiber-starter-kit/internal/service"
+	"golang-fiber-starter-kit/pkg"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -102,7 +103,7 @@ func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 // @Failure 400 {object} map[string]interface{}
 // @Failure 401 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
-// @Router /users/{id} [put]
+// @Router /users/{id} [patch]
 func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 	id, err := strconv.ParseUint(c.Params("id"), 10, 32)
 	if err != nil {
@@ -158,4 +159,35 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "User deleted successfully",
 	})
+}
+
+// GetUsersPaginated godoc
+// @Summary Get paginated users with search
+// @Description Get paginated list of users with search functionality
+// @Tags users
+// @Security Bearer
+// @Accept json
+// @Produce json
+// @Param request body pkg.Pagination true "Pagination request"
+// @Success 200 {object} pkg.Pagination
+// @Failure 400 {object} map[string]interface{}
+// @Failure 401 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /users/pagination [post]
+func (h *UserHandler) GetUsersPaginated(c *fiber.Ctx) error {
+	var pagination pkg.Pagination
+	if err := c.BodyParser(&pagination); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
+
+	result, err := h.userService.GetUsersWithPagination(&pagination)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(result)
 }

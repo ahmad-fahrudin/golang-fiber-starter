@@ -20,6 +20,7 @@ func SetupRoutes(app *fiber.App, authHandler *handlers.AuthHandler, userHandler 
 	// User routes (protected)
 	users := api.Group("/users", middleware.JWTMiddleware())
 	users.Get("/", userHandler.GetUsers)
+	users.Post("/pagination", userHandler.GetUsersPaginated)
 	users.Get("/:id", userHandler.GetUser)
 	users.Put("/:id", userHandler.UpdateUser)
 	users.Delete("/:id", userHandler.DeleteUser)

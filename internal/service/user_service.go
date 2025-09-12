@@ -2,15 +2,18 @@ package service
 
 import (
 	"errors"
+	"math"
 
 	"golang-fiber-starter-kit/internal/model"
 	"golang-fiber-starter-kit/internal/repository"
+	"golang-fiber-starter-kit/pkg"
 
 	"gorm.io/gorm"
 )
 
 type UserService interface {
 	GetAllUsers(page, limit int) ([]model.UserResponse, int64, error)
+	GetUsersWithPagination(pagination *pkg.Pagination) (*pkg.Pagination, error)
 	GetUserByID(id uint) (*model.UserResponse, error)
 	UpdateUser(id uint, req model.UpdateUserRequest) (*model.UserResponse, error)
 	DeleteUser(id uint) error
@@ -45,6 +48,29 @@ func (s *userService) GetAllUsers(page, limit int) ([]model.UserResponse, int64,
 	}
 
 	return userResponses, total, nil
+}
+
+func (s *userService) GetUsersWithPagination(pagination *pkg.Pagination) (*pkg.Pagination, error) {
+	users, err := s.userRepo.GetWithPagination(pagination)
+	if err != nil {
+		return nil, err
+	}
+
+	total, err := s.userRepo.CountWithSearch(pagination.Keyword)
+	if err != nil {
+		return nil, err
+	}
+
+	var userResponses []model.UserResponse
+	for _, user := range users {
+		userResponses = append(userResponses, user.ToResponse())
+	}
+
+	pagination.TotalRows = total
+	pagination.TotalPages = int(math.Ceil(float64(total) / float64(pagination.GetLimit())))
+	pagination.Rows = userResponses
+
+	return pagination, nil
 }
 
 func (s *userService) GetUserByID(id uint) (*model.UserResponse, error) {

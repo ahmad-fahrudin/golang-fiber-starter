@@ -3,6 +3,7 @@ package repository
 import (
 	"golang-fiber-starter-kit/internal/model"
 	"golang-fiber-starter-kit/internal/platform"
+	"golang-fiber-starter-kit/pkg"
 
 	"gorm.io/gorm"
 )
@@ -14,7 +15,9 @@ type UserRepository interface {
 	Update(user *model.User) error
 	Delete(id uint) error
 	GetAll(offset, limit int) ([]model.User, error)
+	GetWithPagination(pagination *pkg.Pagination) ([]model.User, error)
 	Count() (int64, error)
+	CountWithSearch(keyword string) (int64, error)
 }
 
 type userRepository struct {
@@ -66,5 +69,40 @@ func (r *userRepository) GetAll(offset, limit int) ([]model.User, error) {
 func (r *userRepository) Count() (int64, error) {
 	var count int64
 	err := r.db.Model(&model.User{}).Count(&count).Error
+	return count, err
+}
+
+func (r *userRepository) GetWithPagination(pagination *pkg.Pagination) ([]model.User, error) {
+	var users []model.User
+	query := r.db.Model(&model.User{})
+
+	// Apply search if keyword is provided
+	if pagination.Keyword != "" {
+		searchPattern := "%" + pagination.Keyword + "%"
+		query = query.Where("name ILIKE ? OR email ILIKE ?", searchPattern, searchPattern)
+	}
+
+	// Apply sorting if provided
+	if sort := pagination.GetSort(); sort != "" {
+		query = query.Order(sort)
+	} else {
+		query = query.Order("id ASC") // Default sorting
+	}
+
+	// Apply pagination
+	err := query.Offset(pagination.GetOffset()).Limit(pagination.GetLimit()).Find(&users).Error
+	return users, err
+}
+
+func (r *userRepository) CountWithSearch(keyword string) (int64, error) {
+	var count int64
+	query := r.db.Model(&model.User{})
+
+	if keyword != "" {
+		searchPattern := "%" + keyword + "%"
+		query = query.Where("name ILIKE ? OR email ILIKE ?", searchPattern, searchPattern)
+	}
+
+	err := query.Count(&count).Error
 	return count, err
 }
