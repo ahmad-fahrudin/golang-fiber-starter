@@ -79,9 +79,18 @@ golang-fiber-starter-kit/
    ```
 
 5. **Run database migrations and seeders:**
-   ```bash
-   go run migrations/seeder.go
-   ```
+
+   This project provides small CLI entrypoints under `cmd/` to run migrations and seeders.
+
+   - Run migrations (AutoMigrate):
+     ```powershell
+     go run ./cmd/migrate
+     ```
+
+   - Run seeders (insert default users if table empty):
+     ```powershell
+     go run ./cmd/seeder
+     ```
 
 6. **Start the server:**
    ```bash
@@ -153,11 +162,12 @@ curl -X GET "http://localhost:3000/api/v1/users?page=1&limit=10" \
 
 ## Default Users
 
-After running the seeder, you can use these default accounts:
+After running the seeder, these default accounts are created (if the users table is empty):
 
 - **Admin:** admin@example.com / password123
-- **User 1:** john@example.com / password123
-- **User 2:** jane@example.com / password123
+- **Regular User:** user@example.com / password123
+
+Note: The seeder in this starter kit inserts two accounts by default: an admin account and a regular user (see `database/seeders/user_seeder.go`). Passwords are hashed before saving.
 
 ## Development
 
