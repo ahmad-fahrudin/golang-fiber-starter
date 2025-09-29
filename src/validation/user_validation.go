@@ -19,7 +19,9 @@ type UpdatePassOrVerify struct {
 }
 
 type QueryUser struct {
-	Page   int    `validate:"omitempty,number,max=50"`
-	Limit  int    `validate:"omitempty,number,max=50"`
-	Search string `validate:"omitempty,max=50"`
+	Page      int     `validate:"omitempty,number,max=50"`
+	Limit     int     `validate:"omitempty,number,max=50"`
+	Search    string  `validate:"omitempty,max=50"`
+	StartDate *string `validate:"omitempty"`
+	EndDate   *string `validate:"omitempty"`
 }

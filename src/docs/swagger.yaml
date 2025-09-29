@@ -588,35 +588,6 @@ paths:
       tags:
       - Health
   /users:
-    get:
-      description: Only admins can retrieve all users.
-      parameters:
-      - default: 1
-        description: Page number
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: Maximum number of users
-        in: query
-        name: limit
-        type: integer
-      - description: Search by name or email or role
-        in: query
-        name: search
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/example.GetAllUserResponse'
-      security:
-      - BearerAuth: []
-      summary: Get all users
-      tags:
-      - Users
     post:
       description: Only admins can create other users.
       parameters:
@@ -706,6 +677,44 @@ paths:
       security:
       - BearerAuth: []
       summary: Update a user
+      tags:
+      - Users
+  /users/paginated:
+    get:
+      description: Example of using the new pagination utility with date filtering
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Maximum number of users
+        in: query
+        name: limit
+        type: integer
+      - description: Search by name or email or role
+        in: query
+        name: search
+        type: string
+      - description: Filter by start date (YYYY-MM-DD)
+        in: query
+        name: start_date
+        type: string
+      - description: Filter by end date (YYYY-MM-DD)
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/example.GetAllUserResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all users with new pagination utility
       tags:
       - Users
 securityDefinitions:

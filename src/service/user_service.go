@@ -13,7 +13,7 @@ import (
 )
 
 type UserService interface {
-	GetUsers(c *fiber.Ctx, params *validation.QueryUser) ([]model.User, int64, error)
+	GetUsersWithPagination(c *fiber.Ctx, params *utils.PaginationParams) (*utils.PaginationResult[model.User], error)
 	GetUserByID(c *fiber.Ctx, id string) (*model.User, error)
 	GetUserByEmail(c *fiber.Ctx, email string) (*model.User, error)
 	CreateUser(c *fiber.Ctx, req *validation.CreateUser) (*model.User, error)
@@ -37,35 +37,31 @@ func NewUserService(db *gorm.DB, validate *validator.Validate) UserService {
 	}
 }
 
-func (s *userService) GetUsers(c *fiber.Ctx, params *validation.QueryUser) ([]model.User, int64, error) {
-	var users []model.User
-	var totalResults int64
-
+// GetUsersWithPagination uses the new pagination
+func (s *userService) GetUsersWithPagination(c *fiber.Ctx, params *utils.PaginationParams) (*utils.PaginationResult[model.User], error) {
 	if err := s.Validate.Struct(params); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
-	offset := (params.Page - 1) * params.Limit
-	query := s.DB.WithContext(c.Context()).Order("created_at asc")
-
-	if search := params.Search; search != "" {
-		query = query.Where("name LIKE ? OR email LIKE ? OR role LIKE ?",
+	// Define search callback for User model
+	userSearchCallback := func(query *gorm.DB, search string) *gorm.DB {
+		return query.Where("name LIKE ? OR email LIKE ? OR role LIKE ?",
 			"%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
 
-	result := query.Find(&users).Count(&totalResults)
-	if result.Error != nil {
-		s.Log.Errorf("Failed to search users: %+v", result.Error)
-		return nil, 0, result.Error
+	// Use the pagination utility with search
+	result, err := utils.ApplyPaginationWithSearch[model.User](
+		s.DB.WithContext(c.Context()),
+		params,
+		"created_at",
+		userSearchCallback,
+	)
+	if err != nil {
+		s.Log.Errorf("Failed to get users with pagination: %+v", err)
+		return nil, err
 	}
 
-	result = query.Limit(params.Limit).Offset(offset).Find(&users)
-	if result.Error != nil {
-		s.Log.Errorf("Failed to get all users: %+v", result.Error)
-		return nil, 0, result.Error
-	}
-
-	return users, totalResults, result.Error
+	return result, nil
 }
 
 func (s *userService) GetUserByID(c *fiber.Ctx, id string) (*model.User, error) {

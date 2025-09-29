@@ -4,8 +4,8 @@ import (
 	"app/src/model"
 	"app/src/response"
 	"app/src/service"
+	"app/src/utils"
 	"app/src/validation"
-	"math"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -24,23 +24,22 @@ func NewUserController(userService service.UserService, tokenService service.Tok
 }
 
 // @Tags         Users
-// @Summary      Get all users
-// @Description  Only admins can retrieve all users.
+// @Summary      Get all users with new pagination utility
+// @Description  Example of using the new pagination utility with date filtering
 // @Security BearerAuth
 // @Produce      json
-// @Param        page     query     int     false   "Page number"  default(1)
-// @Param        limit    query     int     false   "Maximum number of users"    default(10)
-// @Param        search   query     string  false  "Search by name or email or role"
-// @Router       /users [get]
+// @Param        page       query     int     false   "Page number"  default(1)
+// @Param        limit      query     int     false   "Maximum number of users"    default(10)
+// @Param        search     query     string  false  "Search by name or email or role"
+// @Param        start_date query     string  false  "Filter by start date (YYYY-MM-DD)"
+// @Param        end_date   query     string  false  "Filter by end date (YYYY-MM-DD)"
+// @Router       /users/paginated [get]
 // @Success      200  {object}  example.GetAllUserResponse
-func (u *UserController) GetUsers(c *fiber.Ctx) error {
-	query := &validation.QueryUser{
-		Page:   c.QueryInt("page", 1),
-		Limit:  c.QueryInt("limit", 10),
-		Search: c.Query("search", ""),
-	}
+func (u *UserController) GetUsersWithPagination(c *fiber.Ctx) error {
+	// Extract pagination parameters using utility
+	paginationParams := utils.ExtractPaginationParams(c)
 
-	users, totalResults, err := u.UserService.GetUsers(c, query)
+	result, err := u.UserService.GetUsersWithPagination(c, paginationParams)
 	if err != nil {
 		return err
 	}
@@ -50,11 +49,11 @@ func (u *UserController) GetUsers(c *fiber.Ctx) error {
 			Code:         fiber.StatusOK,
 			Status:       "success",
 			Message:      "Get all users successfully",
-			Results:      users,
-			Page:         query.Page,
-			Limit:        query.Limit,
-			TotalPages:   int64(math.Ceil(float64(totalResults) / float64(query.Limit))),
-			TotalResults: totalResults,
+			Results:      result.Results,
+			Page:         result.Page,
+			Limit:        result.Limit,
+			TotalPages:   result.TotalPages,
+			TotalResults: result.TotalResults,
 		})
 }
 
