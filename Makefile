@@ -32,3 +32,15 @@ docker-down:
 	@docker-compose down --rmi all --volumes --remove-orphans
 docker-cache:
 	@docker builder prune -f
+
+# Seeder commands
+seed-all:
+	@go run cmd/seeder/main.go all
+seed-list:
+	@go run cmd/seeder/main.go list
+seed-%:
+	@go run cmd/seeder/main.go run $(shell echo $* | sed 's/_/ /g')
+seed-refresh-%:
+	@go run cmd/seeder/main.go refresh $(word 1,$(subst _, ,$*)) $(word 2,$(subst _, ,$*))
+seed-truncate-%:
+	@go run cmd/seeder/main.go truncate $*

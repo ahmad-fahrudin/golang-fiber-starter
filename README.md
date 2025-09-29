@@ -158,6 +158,22 @@ make migrate-docker-up
 make migrate-docker-down
 ```
 
+Seeder:
+
+```bash
+# run all seeders
+make seed-all
+
+# list available seeders
+make seed-list
+
+# run specific seeder
+make seed-User
+
+# truncate table
+make seed-truncate-users
+```
+
 ## Environment Variables
 
 The environment variables can be found and modified in the `.env` file. They come with these default values:
