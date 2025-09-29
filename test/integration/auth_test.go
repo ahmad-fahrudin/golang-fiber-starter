@@ -698,7 +698,7 @@ func TestAuthMiddleware(t *testing.T) {
 	})
 
 	t.Run("should call next with unauthorized error if access token is not found in header", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "/v1/users", nil)
+		request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated", nil)
 		apiResponse, err := test.App.Test(request)
 		assert.Nil(t, err)
 
@@ -706,7 +706,7 @@ func TestAuthMiddleware(t *testing.T) {
 	})
 
 	t.Run("should call next with unauthorized error if access token is not a valid jwt token", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "/v1/users", nil)
+		request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated", nil)
 		request.Header.Set("Authorization", "Bearer randomToken")
 
 		apiResponse, err := test.App.Test(request)
@@ -722,7 +722,7 @@ func TestAuthMiddleware(t *testing.T) {
 		refreshToken, err := fixture.RefreshToken(fixture.UserOne)
 		assert.Nil(t, err)
 
-		request := httptest.NewRequest(http.MethodGet, "/v1/users", nil)
+		request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated", nil)
 		request.Header.Set("Authorization", "Bearer "+refreshToken)
 
 		apiResponse, err := test.App.Test(request)
@@ -738,7 +738,7 @@ func TestAuthMiddleware(t *testing.T) {
 		accessToken, err := helper.GenerateInvalidToken(fixture.UserOne.ID.String(), fixture.ExpiresAccessToken, config.TokenTypeAccess)
 		assert.Nil(t, err)
 
-		request := httptest.NewRequest(http.MethodGet, "/v1/users", nil)
+		request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated", nil)
 		request.Header.Set("Authorization", "Bearer "+accessToken)
 
 		apiResponse, err := test.App.Test(request)
@@ -757,7 +757,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 		time.Sleep(2 * time.Second)
 
-		request := httptest.NewRequest(http.MethodGet, "/v1/users", nil)
+		request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated", nil)
 		request.Header.Set("Authorization", "Bearer "+accessToken)
 
 		apiResponse, err := test.App.Test(request)
@@ -772,7 +772,7 @@ func TestAuthMiddleware(t *testing.T) {
 		accessToken, err := fixture.AccessToken(fixture.UserOne)
 		assert.Nil(t, err)
 
-		request := httptest.NewRequest(http.MethodGet, "/v1/users", nil)
+		request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated", nil)
 		request.Header.Set("Authorization", "Bearer "+accessToken)
 
 		apiResponse, err := test.App.Test(request)
@@ -788,7 +788,7 @@ func TestAuthMiddleware(t *testing.T) {
 		accessToken, err := fixture.AccessToken(fixture.UserOne)
 		assert.Nil(t, err)
 
-		request := httptest.NewRequest(http.MethodGet, "/v1/users", nil)
+		request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated", nil)
 		request.Header.Set("Authorization", "Bearer "+accessToken)
 
 		apiResponse, err := test.App.Test(request)

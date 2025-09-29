@@ -3,6 +3,7 @@ package validation
 import (
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -56,6 +57,14 @@ func defaultErrorMessage(err validator.FieldError) string {
 
 func Validator() *validator.Validate {
 	validate := validator.New()
+
+	// Custom validation for password: must contain at least one letter and one number
+	validate.RegisterValidation("password", func(fl validator.FieldLevel) bool {
+		password := fl.Field().String()
+		hasLetter := regexp.MustCompile(`[a-zA-Z]`).MatchString(password)
+		hasNumber := regexp.MustCompile(`[0-9]`).MatchString(password)
+		return hasLetter && hasNumber
+	})
 
 	return validate
 }

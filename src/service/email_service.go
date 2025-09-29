@@ -21,6 +21,12 @@ type emailService struct {
 }
 
 func NewEmailService() EmailService {
+	// Check if SMTP configuration is valid
+	if config.SMTPHost == "" || config.SMTPHost == "email-server" {
+		utils.Log.Warn("SMTP configuration not set properly, using mock email service")
+		return NewMockEmailService()
+	}
+
 	return &emailService{
 		Log: utils.Log,
 		Dialer: gomail.NewDialer(

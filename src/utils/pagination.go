@@ -73,7 +73,7 @@ func ApplyPagination[T any](db *gorm.DB, params *PaginationParams, dateField str
 	}
 
 	// Apply pagination and get results
-	if err := dataQuery.Limit(params.Limit).Offset(offset).Order(dateField + " DESC").Find(&results).Error; err != nil {
+	if err := dataQuery.Limit(params.Limit).Offset(offset).Order(dateField + " ASC").Find(&results).Error; err != nil {
 		return nil, err
 	}
 
@@ -226,7 +226,7 @@ func ApplyPaginationWithSearch[T any](
 	}
 
 	// Apply pagination and get results
-	if err := query.Limit(params.Limit).Offset(offset).Order(dateField + " DESC").Find(&results).Error; err != nil {
+	if err := query.Limit(params.Limit).Offset(offset).Order(dateField + " ASC").Find(&results).Error; err != nil {
 		return nil, err
 	}
 

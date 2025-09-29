@@ -176,7 +176,7 @@ func (a *AuthController) ForgotPassword(c *fiber.Ctx) error {
 	}
 
 	if errEmail := a.EmailService.SendResetPasswordEmail(req.Email, resetPasswordToken); errEmail != nil {
-		return errEmail
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to send reset password email")
 	}
 
 	return c.Status(fiber.StatusOK).
@@ -233,7 +233,7 @@ func (a *AuthController) SendVerificationEmail(c *fiber.Ctx) error {
 	}
 
 	if errEmail := a.EmailService.SendVerificationEmail(user.Email, *verifyEmailToken); errEmail != nil {
-		return errEmail
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to send verification email")
 	}
 
 	return c.Status(fiber.StatusOK).

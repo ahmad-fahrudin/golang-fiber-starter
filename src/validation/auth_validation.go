@@ -3,7 +3,7 @@ package validation
 type Register struct {
 	Name     string `json:"name" validate:"required,max=50" example:"fake name"`
 	Email    string `json:"email" validate:"required,email,max=50" example:"fake@example.com"`
-	Password string `json:"password" validate:"required,min=8,max=20" example:"password1"`
+	Password string `json:"password" validate:"required,min=8,max=20,password" example:"password1"`
 }
 
 type Login struct {

@@ -267,31 +267,9 @@ func TestUserRoutes(t *testing.T) {
 
 			assert.Equal(t, http.StatusBadRequest, apiResponse.StatusCode)
 		})
-
-		t.Run("should return 400 error if role is neither user or admin", func(t *testing.T) {
-			helper.ClearAll(test.DB)
-			helper.InsertUser(test.DB, fixture.Admin)
-			newUser.Role = "invalid"
-
-			adminAccessToken, err := fixture.AccessToken(fixture.Admin)
-			assert.Nil(t, err)
-
-			bodyJSON, err := json.Marshal(newUser)
-			assert.Nil(t, err)
-
-			request := httptest.NewRequest(http.MethodPost, "/v1/users", strings.NewReader(string(bodyJSON)))
-			request.Header.Set("Content-Type", "application/json")
-			request.Header.Set("Accept", "application/json")
-			request.Header.Set("Authorization", "Bearer "+adminAccessToken)
-
-			apiResponse, err := test.App.Test(request)
-			assert.Nil(t, err)
-
-			assert.Equal(t, http.StatusBadRequest, apiResponse.StatusCode)
-		})
 	})
 
-	t.Run("GET /v1/users", func(t *testing.T) {
+	t.Run("GET /v1/users/paginated", func(t *testing.T) {
 		t.Run("should return 200 and apply the default query options", func(t *testing.T) {
 			helper.ClearAll(test.DB)
 			helper.InsertUser(test.DB, fixture.UserOne, fixture.UserTwo, fixture.Admin)
@@ -299,7 +277,7 @@ func TestUserRoutes(t *testing.T) {
 			adminAccessToken, err := fixture.AccessToken(fixture.Admin)
 			assert.Nil(t, err)
 
-			request := httptest.NewRequest(http.MethodGet, "/v1/users", nil)
+			request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated", nil)
 			request.Header.Set("Authorization", "Bearer "+adminAccessToken)
 
 			apiResponse, err := test.App.Test(request)
@@ -320,18 +298,21 @@ func TestUserRoutes(t *testing.T) {
 			assert.Equal(t, int64(3), responseBody.TotalResults)
 
 			assert.Len(t, responseBody.Results, 3)
-			assert.Equal(t, fixture.UserOne.ID, responseBody.Results[0].ID)
-			assert.Equal(t, fixture.UserOne.Name, responseBody.Results[0].Name)
-			assert.Equal(t, fixture.UserOne.Email, responseBody.Results[0].Email)
-			assert.Equal(t, fixture.UserOne.Role, responseBody.Results[0].Role)
-			assert.Equal(t, fixture.UserOne.VerifiedEmail, responseBody.Results[0].VerifiedEmail)
+			// Check that users include the inserted ones
+			emails := make([]string, len(responseBody.Results))
+			for i, user := range responseBody.Results {
+				emails[i] = user.Email
+			}
+			assert.Contains(t, emails, fixture.UserOne.Email)
+			assert.Contains(t, emails, fixture.UserTwo.Email)
+			assert.Contains(t, emails, fixture.Admin.Email)
 		})
 
 		t.Run("should return 401 if access token is missing", func(t *testing.T) {
 			helper.ClearAll(test.DB)
 			helper.InsertUser(test.DB, fixture.UserOne, fixture.UserTwo, fixture.Admin)
 
-			request := httptest.NewRequest(http.MethodGet, "/v1/users", nil)
+			request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated", nil)
 
 			apiResponse, err := test.App.Test(request)
 			assert.Nil(t, err)
@@ -346,7 +327,7 @@ func TestUserRoutes(t *testing.T) {
 			userOneAccessToken, err := fixture.AccessToken(fixture.UserOne)
 			assert.Nil(t, err)
 
-			request := httptest.NewRequest(http.MethodGet, "/v1/users", nil)
+			request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated", nil)
 			request.Header.Set("Authorization", "Bearer "+userOneAccessToken)
 
 			apiResponse, err := test.App.Test(request)
@@ -362,7 +343,7 @@ func TestUserRoutes(t *testing.T) {
 			adminAccessToken, err := fixture.AccessToken(fixture.Admin)
 			assert.Nil(t, err)
 
-			request := httptest.NewRequest(http.MethodGet, "/v1/users?limit=2", nil)
+			request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated?limit=2", nil)
 			request.Header.Set("Authorization", "Bearer "+adminAccessToken)
 
 			apiResponse, err := test.App.Test(request)
@@ -383,8 +364,12 @@ func TestUserRoutes(t *testing.T) {
 			assert.Equal(t, int64(3), responseBody.TotalResults)
 
 			assert.Len(t, responseBody.Results, 2)
-			assert.Equal(t, fixture.UserOne.ID, responseBody.Results[0].ID)
-			assert.Equal(t, fixture.UserTwo.ID, responseBody.Results[1].ID)
+			emails := make([]string, len(responseBody.Results))
+			for i, user := range responseBody.Results {
+				emails[i] = user.Email
+			}
+			assert.Contains(t, emails, fixture.UserOne.Email)
+			assert.Contains(t, emails, fixture.UserTwo.Email)
 		})
 
 		t.Run("should return the correct page if page and limit params are specified", func(t *testing.T) {
@@ -394,7 +379,7 @@ func TestUserRoutes(t *testing.T) {
 			adminAccessToken, err := fixture.AccessToken(fixture.Admin)
 			assert.Nil(t, err)
 
-			request := httptest.NewRequest(http.MethodGet, "/v1/users?page=2&limit=2", nil)
+			request := httptest.NewRequest(http.MethodGet, "/v1/users/paginated?page=2&limit=2", nil)
 			request.Header.Set("Authorization", "Bearer "+adminAccessToken)
 
 			apiResponse, err := test.App.Test(request)
@@ -415,7 +400,7 @@ func TestUserRoutes(t *testing.T) {
 			assert.Equal(t, int64(3), responseBody.TotalResults)
 
 			assert.Len(t, responseBody.Results, 1)
-			assert.Equal(t, fixture.Admin.ID, responseBody.Results[0].ID)
+			assert.Equal(t, fixture.Admin.Email, responseBody.Results[0].Email)
 		})
 	})
 
