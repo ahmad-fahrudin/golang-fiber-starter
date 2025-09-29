@@ -33,14 +33,43 @@ docker-down:
 docker-cache:
 	@docker builder prune -f
 
+# Fresh migration commands (similar to Laravel's migrate:fresh --seed)
+migrate-fresh:
+	@echo "Running fresh migration (drop all tables and re-migrate)..."
+	@migrate -database "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" -path src/database/migrations down -all
+	@migrate -database "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" -path src/database/migrations up
+	@echo "Fresh migration completed!"
+
+migrate-fresh-seed:
+	@echo "Running fresh migration with seeding (similar to Laravel's migrate:fresh --seed)..."
+	@migrate -database "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" -path src/database/migrations down -all
+	@migrate -database "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" -path src/database/migrations up
+	@echo "Migration completed, now running seeders..."
+	@go run src/main.go --seed all
+	@echo "Fresh migration with seeding completed!"
+
+migrate-docker-fresh:
+	@echo "Running fresh migration with Docker..."
+	@docker run -v ./src/database/migrations:/migrations --network go-fiber-boilerplate_go-network migrate/migrate -path=/migrations/ -database postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable down -all
+	@docker run -v ./src/database/migrations:/migrations --network go-fiber-boilerplate_go-network migrate/migrate -path=/migrations/ -database postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable up
+	@echo "Docker fresh migration completed!"
+
+migrate-docker-fresh-seed:
+	@echo "Running fresh migration with seeding using Docker..."
+	@docker run -v ./src/database/migrations:/migrations --network go-fiber-boilerplate_go-network migrate/migrate -path=/migrations/ -database postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable down -all
+	@docker run -v ./src/database/migrations:/migrations --network go-fiber-boilerplate_go-network migrate/migrate -path=/migrations/ -database postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable up
+	@echo "Migration completed, now running seeders..."
+	@go run src/main.go --seed all
+	@echo "Docker fresh migration with seeding completed!"
+
 # Seeder commands
 seed-all:
-	@go run cmd/seeder/main.go all
+	@go run src/main.go --seed all
 seed-list:
-	@go run cmd/seeder/main.go list
+	@go run src/main.go --seed list
 seed-%:
-	@go run cmd/seeder/main.go run $(shell echo $* | sed 's/_/ /g')
+	@go run src/main.go --seed run $(shell echo $* | sed 's/_/ /g')
 seed-refresh-%:
-	@go run cmd/seeder/main.go refresh $(word 1,$(subst _, ,$*)) $(word 2,$(subst _, ,$*))
+	@go run src/main.go --seed refresh $(word 1,$(subst _, ,$*)) $(word 2,$(subst _, ,$*))
 seed-truncate-%:
-	@go run cmd/seeder/main.go truncate $*
+	@go run src/main.go --seed truncate $*

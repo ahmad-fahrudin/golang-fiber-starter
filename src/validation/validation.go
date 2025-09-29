@@ -17,7 +17,6 @@ var customMessages = map[string]string{
 	"positive": "Field %s must be a positive number",
 	"alphanum": "Field %s must contain only alphanumeric characters",
 	"oneof":    "Invalid value for field %s",
-	"password": "Field %s must contain at least 1 letter and 1 number",
 }
 
 func CustomErrorMessages(err error) map[string]string {
@@ -57,10 +56,6 @@ func defaultErrorMessage(err validator.FieldError) string {
 
 func Validator() *validator.Validate {
 	validate := validator.New()
-
-	if err := validate.RegisterValidation("password", Password); err != nil {
-		return nil
-	}
 
 	return validate
 }

@@ -33,8 +33,6 @@ func NewUserController(userService service.UserService, tokenService service.Tok
 // @Param        search   query     string  false  "Search by name or email or role"
 // @Router       /users [get]
 // @Success      200  {object}  example.GetAllUserResponse
-// @Failure      401  {object}  example.Unauthorized  "Unauthorized"
-// @Failure      403  {object}  example.Forbidden  "Forbidden"
 func (u *UserController) GetUsers(c *fiber.Ctx) error {
 	query := &validation.QueryUser{
 		Page:   c.QueryInt("page", 1),
@@ -68,9 +66,6 @@ func (u *UserController) GetUsers(c *fiber.Ctx) error {
 // @Param        id  path  string  true  "User id"
 // @Router       /users/{id} [get]
 // @Success      200  {object}  example.GetUserResponse
-// @Failure      401  {object}  example.Unauthorized  "Unauthorized"
-// @Failure      403  {object}  example.Forbidden  "Forbidden"
-// @Failure      404  {object}  example.NotFound  "Not found"
 func (u *UserController) GetUserByID(c *fiber.Ctx) error {
 	userID := c.Params("userId")
 
@@ -100,9 +95,6 @@ func (u *UserController) GetUserByID(c *fiber.Ctx) error {
 // @Param        request  body  validation.CreateUser  true  "Request body"
 // @Router       /users [post]
 // @Success      201  {object}  example.CreateUserResponse
-// @Failure      401  {object}  example.Unauthorized  "Unauthorized"
-// @Failure      403  {object}  example.Forbidden  "Forbidden"
-// @Failure      409  {object}  example.DuplicateEmail  "Email already taken"
 func (u *UserController) CreateUser(c *fiber.Ctx) error {
 	req := new(validation.CreateUser)
 
@@ -133,10 +125,6 @@ func (u *UserController) CreateUser(c *fiber.Ctx) error {
 // @Param        request  body  validation.UpdateUser  true  "Request body"
 // @Router       /users/{id} [patch]
 // @Success      200  {object}  example.UpdateUserResponse
-// @Failure      401  {object}  example.Unauthorized  "Unauthorized"
-// @Failure      403  {object}  example.Forbidden  "Forbidden"
-// @Failure      404  {object}  example.NotFound  "Not found"
-// @Failure      409  {object}  example.DuplicateEmail  "Email already taken"
 func (u *UserController) UpdateUser(c *fiber.Ctx) error {
 	req := new(validation.UpdateUser)
 	userID := c.Params("userId")
@@ -171,9 +159,6 @@ func (u *UserController) UpdateUser(c *fiber.Ctx) error {
 // @Param        id  path  string  true  "User id"
 // @Router       /users/{id} [delete]
 // @Success      200  {object}  example.DeleteUserResponse
-// @Failure      401  {object}  example.Unauthorized  "Unauthorized"
-// @Failure      403  {object}  example.Forbidden  "Forbidden"
-// @Failure      404  {object}  example.NotFound  "Not found"
 func (u *UserController) DeleteUser(c *fiber.Ctx) error {
 	userID := c.Params("userId")
 

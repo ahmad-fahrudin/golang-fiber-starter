@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/gofiber/fiber/v2"
@@ -30,6 +31,11 @@ import (
 // @name Authorization
 // @description Example Value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "--seed" {
+		runSeeder()
+		return
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -108,4 +114,70 @@ func handleGracefulShutdown(ctx context.Context, app *fiber.App, serverErrors <-
 	}
 
 	utils.Log.Info("Server exited")
+}
+
+func runSeeder() {
+	command := "all"
+	if len(os.Args) > 2 {
+		command = os.Args[2]
+	}
+
+	sc := database.NewSeederConfig()
+
+	switch command {
+	case "all":
+		if err := sc.RunAllSeeders(); err != nil {
+			fmt.Printf("Error running all seeders: %v\n", err)
+			os.Exit(1)
+		}
+	case "list":
+		sc.ListAvailableSeeders()
+	case "run":
+		if len(os.Args) < 4 {
+			fmt.Println("Error: seeder name required for 'run' command")
+			printSeederUsage()
+			os.Exit(1)
+		}
+		seederName := strings.Join(os.Args[3:], " ")
+		if err := sc.RunSpecificSeeder(seederName); err != nil {
+			fmt.Printf("Error running seeder %s: %v\n", seederName, err)
+			os.Exit(1)
+		}
+	case "refresh":
+		if len(os.Args) < 5 {
+			fmt.Println("Error: seeder name and table name required for 'refresh' command")
+			printSeederUsage()
+			os.Exit(1)
+		}
+		seederName := os.Args[3]
+		tableName := os.Args[4]
+		if err := sc.RefreshSeeder(seederName, tableName); err != nil {
+			fmt.Printf("Error refreshing seeder %s: %v\n", seederName, err)
+			os.Exit(1)
+		}
+	case "truncate":
+		if len(os.Args) < 4 {
+			fmt.Println("Error: table name required for 'truncate' command")
+			printSeederUsage()
+			os.Exit(1)
+		}
+		tableName := os.Args[3]
+		if err := sc.TruncateTable(tableName); err != nil {
+			fmt.Printf("Error truncating table %s: %v\n", tableName, err)
+			os.Exit(1)
+		}
+	default:
+		fmt.Printf("Unknown seeder command: %s\n", command)
+		printSeederUsage()
+		os.Exit(1)
+	}
+}
+
+func printSeederUsage() {
+	fmt.Println("Usage:")
+	fmt.Println("  go run src/main.go --seed all                    - Run all seeders")
+	fmt.Println("  go run src/main.go --seed list                   - List all available seeders")
+	fmt.Println("  go run src/main.go --seed run <seeder_name>      - Run a specific seeder")
+	fmt.Println("  go run src/main.go --seed refresh <seeder_name> <table_name> - Truncate table and run seeder")
+	fmt.Println("  go run src/main.go --seed truncate <table_name>  - Truncate a table")
 }

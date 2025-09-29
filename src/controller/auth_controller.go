@@ -41,7 +41,6 @@ func NewAuthController(
 // @Param        request  body  validation.Register  true  "Request body"
 // @Router       /auth/register [post]
 // @Success      201  {object}  example.RegisterResponse
-// @Failure      409  {object}  example.DuplicateEmail  "Email already taken"
 func (a *AuthController) Register(c *fiber.Ctx) error {
 	req := new(validation.Register)
 
@@ -76,7 +75,6 @@ func (a *AuthController) Register(c *fiber.Ctx) error {
 // @Param        request  body  validation.Login  true  "Request body"
 // @Router       /auth/login [post]
 // @Success      200  {object}  example.LoginResponse
-// @Failure      401  {object}  example.FailedLogin  "Invalid email or password"
 func (a *AuthController) Login(c *fiber.Ctx) error {
 	req := new(validation.Login)
 
@@ -111,7 +109,6 @@ func (a *AuthController) Login(c *fiber.Ctx) error {
 // @Param        request  body  example.RefreshToken  true  "Request body"
 // @Router       /auth/logout [post]
 // @Success      200  {object}  example.LogoutResponse
-// @Failure      404  {object}  example.NotFound  "Not found"
 func (a *AuthController) Logout(c *fiber.Ctx) error {
 	req := new(validation.Logout)
 
@@ -138,7 +135,6 @@ func (a *AuthController) Logout(c *fiber.Ctx) error {
 // @Param        request  body  example.RefreshToken  true  "Request body"
 // @Router       /auth/refresh-tokens [post]
 // @Success      200  {object}  example.RefreshTokenResponse
-// @Failure      401  {object}  example.Unauthorized  "Unauthorized"
 func (a *AuthController) RefreshTokens(c *fiber.Ctx) error {
 	req := new(validation.RefreshToken)
 
@@ -167,7 +163,6 @@ func (a *AuthController) RefreshTokens(c *fiber.Ctx) error {
 // @Param        request  body  validation.ForgotPassword  true  "Request body"
 // @Router       /auth/forgot-password [post]
 // @Success      200  {object}  example.ForgotPasswordResponse
-// @Failure      404  {object}  example.NotFound  "Not found"
 func (a *AuthController) ForgotPassword(c *fiber.Ctx) error {
 	req := new(validation.ForgotPassword)
 
@@ -200,7 +195,6 @@ func (a *AuthController) ForgotPassword(c *fiber.Ctx) error {
 // @Param        request  body  validation.UpdatePassOrVerify  true  "Request body"
 // @Router       /auth/reset-password [post]
 // @Success      200  {object}  example.ResetPasswordResponse
-// @Failure      401  {object}  example.FailedResetPassword  "Password reset failed"
 func (a *AuthController) ResetPassword(c *fiber.Ctx) error {
 	req := new(validation.UpdatePassOrVerify)
 	query := &validation.Token{
@@ -230,7 +224,6 @@ func (a *AuthController) ResetPassword(c *fiber.Ctx) error {
 // @Produce      json
 // @Router       /auth/send-verification-email [post]
 // @Success      200  {object}  example.SendVerificationEmailResponse
-// @Failure      401  {object}  example.Unauthorized  "Unauthorized"
 func (a *AuthController) SendVerificationEmail(c *fiber.Ctx) error {
 	user, _ := c.Locals("user").(*model.User)
 
@@ -257,7 +250,6 @@ func (a *AuthController) SendVerificationEmail(c *fiber.Ctx) error {
 // @Param        token   query  string  true  "The verify email token"
 // @Router       /auth/verify-email [post]
 // @Success      200  {object}  example.VerifyEmailResponse
-// @Failure      401  {object}  example.FailedVerifyEmail  "Verify email failed"
 func (a *AuthController) VerifyEmail(c *fiber.Ctx) error {
 	query := &validation.Token{
 		Token: c.Query("token"),

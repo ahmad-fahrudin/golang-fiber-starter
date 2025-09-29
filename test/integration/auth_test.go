@@ -122,37 +122,6 @@ func TestAuthRoutes(t *testing.T) {
 
 			assert.Equal(t, http.StatusBadRequest, apiResponse.StatusCode)
 		})
-
-		t.Run("should return 400 error if password does not contain both letters and numbers", func(t *testing.T) {
-			helper.ClearAll(test.DB)
-			requestBody.Password = "password"
-
-			bodyJSON, err := json.Marshal(requestBody)
-			assert.Nil(t, err)
-
-			request := httptest.NewRequest(http.MethodPost, "/v1/auth/register", strings.NewReader(string(bodyJSON)))
-			request.Header.Set("Content-Type", "application/json")
-			request.Header.Set("Accept", "application/json")
-
-			apiResponse, err := test.App.Test(request)
-			assert.Nil(t, err)
-
-			assert.Equal(t, http.StatusBadRequest, apiResponse.StatusCode)
-
-			requestBody.Password = "11111111"
-
-			bodyJSON, err = json.Marshal(requestBody)
-			assert.Nil(t, err)
-
-			request = httptest.NewRequest(http.MethodPost, "/v1/auth/register", strings.NewReader(string(bodyJSON)))
-			request.Header.Set("Content-Type", "application/json")
-			request.Header.Set("Accept", "application/json")
-
-			apiResponse, err = test.App.Test(request)
-			assert.Nil(t, err)
-
-			assert.Equal(t, http.StatusBadRequest, apiResponse.StatusCode)
-		})
 	})
 	t.Run("POST /v1/auth/login", func(t *testing.T) {
 		t.Run("should return 200 and login user if email and password match", func(t *testing.T) {
@@ -595,28 +564,6 @@ func TestAuthRoutes(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, apiResponse.StatusCode)
 
 			bodyJSON, err := json.Marshal(validation.UpdatePassOrVerify{Password: "short1"})
-			assert.Nil(t, err)
-
-			request = httptest.NewRequest(http.MethodPost, "/v1/auth/reset-password?token="+resetPasswordToken, strings.NewReader(string(bodyJSON)))
-			request.Header.Set("Content-Type", "application/json")
-			request.Header.Set("Accept", "application/json")
-
-			apiResponse, err = test.App.Test(request)
-			assert.Nil(t, err)
-			assert.Equal(t, http.StatusBadRequest, apiResponse.StatusCode)
-
-			bodyJSON, err = json.Marshal(validation.UpdatePassOrVerify{Password: "password"})
-			assert.Nil(t, err)
-
-			request = httptest.NewRequest(http.MethodPost, "/v1/auth/reset-password?token="+resetPasswordToken, strings.NewReader(string(bodyJSON)))
-			request.Header.Set("Content-Type", "application/json")
-			request.Header.Set("Accept", "application/json")
-
-			apiResponse, err = test.App.Test(request)
-			assert.Nil(t, err)
-			assert.Equal(t, http.StatusBadRequest, apiResponse.StatusCode)
-
-			bodyJSON, err = json.Marshal(validation.UpdatePassOrVerify{Password: "11111111"})
 			assert.Nil(t, err)
 
 			request = httptest.NewRequest(http.MethodPost, "/v1/auth/reset-password?token="+resetPasswordToken, strings.NewReader(string(bodyJSON)))

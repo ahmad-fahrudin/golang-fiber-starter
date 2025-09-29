@@ -19,7 +19,7 @@ func (s *UserSeeder) Run(db *gorm.DB) error {
 		{
 			Name:          "Admin User",
 			Email:         "admin@gmail.com",
-			Password:      s.hashPassword("passsword"),
+			Password:      s.hashPassword("password"),
 			Role:          "admin",
 			VerifiedEmail: true,
 		},
