@@ -8,6 +8,13 @@ type Common struct {
 	Message string `json:"message"`
 }
 
+type Response struct {
+	Code    int         `json:"code"`
+	Status  string      `json:"status"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
 type SuccessWithUser struct {
 	Code    int        `json:"code"`
 	Status  string     `json:"status"`
@@ -39,4 +46,11 @@ type ErrorDetails struct {
 	Status  string      `json:"status"`
 	Message string      `json:"message"`
 	Errors  interface{} `json:"errors"`
+}
+
+type ErrorResponse struct {
+	Code    int         `json:"code"`
+	Status  string      `json:"status"`
+	Message string      `json:"message"`
+	Errors  interface{} `json:"errors,omitempty"`
 }

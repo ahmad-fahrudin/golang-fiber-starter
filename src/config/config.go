@@ -28,6 +28,14 @@ var (
 	GoogleClientID      string
 	GoogleClientSecret  string
 	RedirectURL         string
+	StorageType         string
+	StorageLocalPath    string
+	StorageMaxFileSize  int64
+	MinIOEndpoint       string
+	MinIOAccessKey      string
+	MinIOSecretKey      string
+	MinIOBucketName     string
+	MinIOUseSSL         bool
 )
 
 func init() {
@@ -63,6 +71,18 @@ func init() {
 	GoogleClientID = viper.GetString("GOOGLE_CLIENT_ID")
 	GoogleClientSecret = viper.GetString("GOOGLE_CLIENT_SECRET")
 	RedirectURL = viper.GetString("REDIRECT_URL")
+
+	// file storage configuration
+	StorageType = viper.GetString("STORAGE_TYPE")
+	StorageLocalPath = viper.GetString("STORAGE_LOCAL_PATH")
+	StorageMaxFileSize = viper.GetInt64("STORAGE_MAX_FILE_SIZE")
+
+	// minio configuration
+	MinIOEndpoint = viper.GetString("MINIO_ENDPOINT")
+	MinIOAccessKey = viper.GetString("MINIO_ACCESS_KEY")
+	MinIOSecretKey = viper.GetString("MINIO_SECRET_KEY")
+	MinIOBucketName = viper.GetString("MINIO_BUCKET_NAME")
+	MinIOUseSSL = viper.GetBool("MINIO_USE_SSL")
 }
 
 func loadConfig() {

@@ -572,6 +572,80 @@ paths:
       summary: Verify email
       tags:
       - Auth
+  /files/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Delete file dari storage (local atau MinIO)
+      parameters:
+      - description: File path to delete
+        in: query
+        name: file_path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Delete file
+      tags:
+      - Files
+  /files/info:
+    get:
+      consumes:
+      - application/json
+      description: Get file information and URL
+      parameters:
+      - description: File path
+        in: query
+        name: file_path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Get file info
+      tags:
+      - Files
+  /files/my-files:
+    get:
+      consumes:
+      - application/json
+      description: Get files uploaded by current user
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Get user files
+      tags:
+      - Files
+  /files/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload file ke storage (local atau MinIO)
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Folder destination
+        in: formData
+        name: folder
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      security:
+      - BearerAuth: []
+      summary: Upload file
+      tags:
+      - Files
   /health-check:
     get:
       consumes:

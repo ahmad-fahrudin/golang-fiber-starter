@@ -1,36 +1,19 @@
-# RESTful API Go Fiber Boilerplate
+# Go Fiber Boilerplate with File Storage
 
 ![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/indrayyana/go-fiber-boilerplate)](https://goreportcard.com/report/github.com/indrayyana/go-fiber-boilerplate)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
-![Repository size](https://img.shields.io/github/repo-size/indrayyana/go-fiber-boilerplate?color=56BEB8)
-![Build](https://github.com/indrayyana/go-fiber-boilerplate/workflows/Build/badge.svg)
-![Test](https://github.com/indrayyana/go-fiber-boilerplate/workflows/Test/badge.svg)
-![Linter](https://github.com/indrayyana/go-fiber-boilerplate/workflows/Linter/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ahmad-fahrudin/golang-fiber-starter)](https://goreportcard.com/report/github.com/ahmad-fahrudin/golang-fiber-starter)
 
-A boilerplate/starter project for quickly building RESTful APIs using Go, Fiber, and PostgreSQL. Inspired by the Express boilerplate.
+A boilerplate/starter project for quickly building RESTful APIs using Go, Fiber, and PostgreSQL with integrated file storage capabilities.
 
-The app comes with many built-in features, such as authentication using JWT and Google OAuth2, request validation, unit and integration tests, docker support, API documentation, pagination, etc. For more details, check the features list below.
+The app comes with many built-in features, such as authentication using JWT and Google OAuth2, request validation, unit and integration tests, docker support, API documentation, pagination, and flexible file storage (Local/MinIO).
 
 ## Quick Start
-
-To create a project, simply run:
-
-```bash
-go mod init <project-name>
-```
-
-## Manual Installation
-
-If you would still prefer to do the installation manually, follow these steps:
 
 Clone the repo:
 
 ```bash
-git clone --depth 1 https://github.com/indrayyana/go-fiber-boilerplate.git
-cd go-fiber-boilerplate
-rm -rf ./.git
+git clone https://github.com/ahmad-fahrudin/golang-fiber-starter.git
+cd golang-fiber-starter
 ```
 
 Install the dependencies:
@@ -43,8 +26,13 @@ Set the environment variables:
 
 ```bash
 cp .env.example .env
+# open .env and modify the environment variables as needed
+```
 
-# open .env and modify the environment variables (if needed)
+Run the application:
+
+```bash
+make start
 ```
 
 ## Table of Contents
@@ -53,19 +41,20 @@ cp .env.example .env
 - [Commands](#commands)
 - [Environment Variables](#environment-variables)
 - [Project Structure](#project-structure)
+- [File Storage Feature](#file-storage-feature)
 - [API Documentation](#api-documentation)
+- [API Endpoints](#api-endpoints)
 - [Error Handling](#error-handling)
 - [Validation](#validation)
 - [Authentication](#authentication)
 - [Authorization](#authorization)
 - [Logging](#logging)
-- [Linting](#linting)
-- [Contributing](#contributing)
 
 ## Features
 
 - **SQL database**: [PostgreSQL](https://www.postgresql.org) Object Relation Mapping using [Gorm](https://gorm.io)
 - **Database migrations**: with [golang-migrate](https://github.com/golang-migrate/migrate)
+- **File Storage**: Support for Local Storage and MinIO object storage
 - **Validation**: request data validation using [Package validator](https://github.com/go-playground/validator)
 - **Logging**: using [Logrus](https://github.com/sirupsen/logrus) and [Fiber-Logger](https://docs.gofiber.io/api/middleware/logger)
 - **Testing**: unit and integration tests using [Testify](https://github.com/stretchr/testify) and formatted test output using [gotestsum](https://github.com/gotestyourself/gotestsum)
@@ -180,31 +169,26 @@ The environment variables can be found and modified in the `.env` file. They com
 
 ```bash
 # server configuration
-# Env value : prod || dev
 APP_ENV=dev
 APP_HOST=0.0.0.0
 APP_PORT=3000
+APP_URL=http://localhost:3000
 
 # database configuration
-DB_HOST=postgresdb
+DB_HOST=localhost
 DB_USER=postgres
-DB_PASSWORD=thisisasamplepassword
-DB_NAME=fiberdb
+DB_PASSWORD=toor
+DB_NAME=golang_fiberdb
 DB_PORT=5432
 
 # JWT
-# JWT secret key
 JWT_SECRET=thisisasamplesecret
-# Number of minutes after which an access token expires
-JWT_ACCESS_EXP_MINUTES=30
-# Number of days after which a refresh token expires
+JWT_ACCESS_EXP_MINUTES=10000
 JWT_REFRESH_EXP_DAYS=30
-# Number of minutes after which a reset password token expires
 JWT_RESET_PASSWORD_EXP_MINUTES=10
-# Number of minutes after which a verify email token expires
 JWT_VERIFY_EMAIL_EXP_MINUTES=10
 
-# SMTP configuration options for the email service
+# SMTP configuration
 SMTP_HOST=email-server
 SMTP_PORT=587
 SMTP_USERNAME=email-server-username
@@ -215,18 +199,30 @@ EMAIL_FROM=support@yourapp.com
 GOOGLE_CLIENT_ID=yourapps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=thisisasamplesecret
 REDIRECT_URL=http://localhost:3000/v1/auth/google-callback
+
+# File Storage configuration
+STORAGE_TYPE=local
+STORAGE_LOCAL_PATH=./uploads
+STORAGE_MAX_FILE_SIZE=10485760
+
+# MinIO configuration (required when STORAGE_TYPE=minio)
+MINIO_ENDPOINT=localhost:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET_NAME=uploads
+MINIO_USE_SSL=false
 ```
 
 ## Project Structure
 
 ```
 src\
- |--config\         # Environment variables and configuration related things
+ |--config\         # Environment variables and configuration
  |--controller\     # Route controllers (controller layer)
  |--database\       # Database connection & migrations
  |--docs\           # Swagger files
  |--middleware\     # Custom fiber middlewares
- |--model\          # Postgres models (data layer)
+ |--model\          # Database models (data layer)
  |--response\       # Response models
  |--router\         # Routes
  |--service\        # Business logic (service layer)
@@ -235,22 +231,72 @@ src\
  |--main.go         # Fiber app
 ```
 
+## File Storage Feature
+
+### Overview
+
+Fitur file storage ini menyediakan dua opsi untuk menyimpan file:
+1. **Local Storage** - Menyimpan file di file system lokal
+2. **MinIO** - Menyimpan file menggunakan MinIO object storage
+
+### Storage Types
+
+#### Local Storage
+- Menggunakan `STORAGE_TYPE=local`
+- File disimpan di direktori yang ditentukan oleh `STORAGE_LOCAL_PATH`
+- File dapat diakses melalui endpoint `/uploads/{folder}/{filename}`
+
+#### MinIO Storage
+- Menggunakan `STORAGE_TYPE=minio`
+- Memerlukan MinIO server yang berjalan
+- File disimpan di MinIO bucket
+
+### File Validation
+
+#### Allowed Extensions
+- Images: `.jpg`, `.jpeg`, `.png`, `.gif`
+- Documents: `.pdf`, `.doc`, `.docx`, `.txt`
+
+#### File Size Limit
+- Maximum file size ditentukan oleh `STORAGE_MAX_FILE_SIZE` (default: 10MB)
+
+### MinIO Setup
+
+#### Installation
+```bash
+# Install MinIO
+go install github.com/minio/minio@latest
+
+# Or download binary from https://min.io/download#/windows
+```
+
+#### Running MinIO Server
+```bash
+# Start MinIO server
+minio server ./data --console-address ":9001"
+
+# Default credentials:
+# Access Key: minioadmin
+# Secret Key: minioadmin
+# Console: http://localhost:9001
+# API: http://localhost:9000
+```
+
+#### MinIO Configuration
+1. Akses MinIO Console di `http://localhost:9001`
+2. Login dengan credentials default
+3. Buat bucket baru dengan nama yang sesuai dengan `MINIO_BUCKET_NAME`
+4. Set bucket policy jika diperlukan
+
 ## API Documentation
 
 To view the list of available APIs and their specifications, run the server and go to `http://localhost:3000/v1/docs` in your browser.
 
-![Auth](https://indrayyana.github.io/assets/images/swagger1.png)
-![User](https://indrayyana.github.io/assets/images/swagger2.png)
-
 This documentation page is automatically generated using the [Swag](https://github.com/swaggo/swag) definitions written as comments in the controller files.
-
-See 👉 [Declarative Comments Format.](https://github.com/swaggo/swag#declarative-comments-format)
 
 ## API Endpoints
 
-List of available routes:
-
-**Auth routes**:\
+### Auth routes
 `POST /v1/auth/register` - register\
 `POST /v1/auth/login` - login\
 `POST /v1/auth/logout` - logout\
@@ -261,18 +307,105 @@ List of available routes:
 `POST /v1/auth/verify-email` - verify email\
 `GET /v1/auth/google` - login with google account
 
-**User routes**:\
+### User routes
 `POST /v1/users` - create a user\
 `GET /v1/users` - get all users\
 `GET /v1/users/:userId` - get user\
 `PATCH /v1/users/:userId` - update user\
 `DELETE /v1/users/:userId` - delete user
 
+### File routes
+`POST /v1/files/upload` - upload file\
+`DELETE /v1/files/delete` - delete file\
+`GET /v1/files/info` - get file info\
+`GET /v1/files/my-files` - get user's files
+
+### File Upload API
+
+#### Upload File
+```
+POST /v1/files/upload
+```
+
+**Headers:**
+- `Authorization: Bearer {token}`
+- `Content-Type: multipart/form-data`
+
+**Form Data:**
+- `file` (required): File yang akan diupload
+- `folder` (optional): Nama folder tujuan (default: "general")
+
+**Response:**
+```json
+{
+  "code": 200,
+  "status": "success",
+  "message": "File uploaded successfully",
+  "data": {
+    "file_name": "image_20241002120000_abcd1234.jpg",
+    "file_path": "general/image_20241002120000_abcd1234.jpg",
+    "file_size": 1024000,
+    "file_url": "/uploads/general/image_20241002120000_abcd1234.jpg"
+  }
+}
+```
+
+#### Delete File
+```
+DELETE /v1/files/delete?file_path={path}
+```
+
+**Headers:**
+- `Authorization: Bearer {token}`
+
+**Query Parameters:**
+- `file_path` (required): Path file yang akan dihapus
+
+#### Get File Info
+```
+GET /v1/files/info?file_path={path}
+```
+
+**Headers:**
+- `Authorization: Bearer {token}`
+
+**Query Parameters:**
+- `file_path` (required): Path file
+
+#### Get My Files
+```
+GET /v1/files/my-files
+```
+
+**Headers:**
+- `Authorization: Bearer {token}`
+
+**Response:**
+```json
+{
+  "code": 200,
+  "status": "success",
+  "message": "Files retrieved successfully",
+  "data": [
+    {
+      "id": "uuid",
+      "file_name": "image_20241002120000_abcd1234.jpg",
+      "file_path": "general/image_20241002120000_abcd1234.jpg",
+      "file_size": 1024000,
+      "file_url": "/uploads/general/image_20241002120000_abcd1234.jpg",
+      "content_type": "image/jpeg",
+      "folder": "general",
+      "uploaded_by": "user_uuid",
+      "created_at": "2024-10-02T12:00:00Z",
+      "updated_at": "2024-10-02T12:00:00Z"
+    }
+  ]
+}
+```
+
 ## Error Handling
 
 The app includes a custom error handling mechanism, which can be found in the `src/utils/error.go` file.
-
-It also utilizes the `Fiber-Recover` middleware to gracefully recover from any panic that might occur in the handler stack, preventing the app from crashing unexpectedly.
 
 The error handling process sends an error response in the following format:
 
@@ -284,9 +417,7 @@ The error handling process sends an error response in the following format:
 }
 ```
 
-Fiber provides a custom error struct using `fiber.NewError()`, where you can specify a response code and a message. This error can then be returned from any part of your code, and Fiber's `ErrorHandler` will automatically catch it.
-
-For example, if you are trying to retrieve a user from the database but the user is not found, and you want to return a 404 error, the code might look like this:
+For example, if you are trying to retrieve a user from the database but the user is not found:
 
 ```go
 func (s *userService) GetUserByID(c *fiber.Ctx, id string) {
@@ -304,7 +435,7 @@ func (s *userService) GetUserByID(c *fiber.Ctx, id string) {
 
 Request data is validated using [Package validator](https://github.com/go-playground/validator). Check the [documentation](https://pkg.go.dev/github.com/go-playground/validator/v10) for more details on how to write validations.
 
-The validation schemas are defined in the `src/validation` directory and are used within the services by passing them to the validation logic. In this example, the CreateUser method in the userService uses the `validation.CreateUser` schema to validate incoming request data before processing it. The validation is handled by the `Validate.Struct` method, which checks the request data against the schema.
+The validation schemas are defined in the `src/validation` directory and are used within the services:
 
 ```go
 import (
@@ -340,90 +471,74 @@ func SetupRoutes(app *fiber.App, u services.UserService, t services.TokenService
 }
 ```
 
-These routes require a valid JWT access token in the Authorization request header using the Bearer schema. If the request does not contain a valid access token, an Unauthorized (401) error is thrown.
+These routes require a valid JWT access token in the Authorization request header using the Bearer schema.
 
 **Generating Access Tokens**:
 
-An access token can be generated by making a successful call to the register (`POST /v1/auth/register`) or login (`POST /v1/auth/login`) endpoints. The response of these endpoints also contains refresh tokens (explained below).
+An access token can be generated by making a successful call to the register (`POST /v1/auth/register`) or login (`POST /v1/auth/login`) endpoints.
 
-An access token is valid for 30 minutes. You can modify this expiration time by changing the `JWT_ACCESS_EXP_MINUTES` environment variable in the .env file.
+An access token is valid for the time specified in `JWT_ACCESS_EXP_MINUTES` environment variable.
 
 **Refreshing Access Tokens**:
 
-After the access token expires, a new access token can be generated, by making a call to the refresh token endpoint (`POST /v1/auth/refresh-tokens`) and sending along a valid refresh token in the request body. This call returns a new access token and a new refresh token.
+After the access token expires, a new access token can be generated by making a call to the refresh token endpoint (`POST /v1/auth/refresh-tokens`) and sending along a valid refresh token in the request body.
 
-A refresh token is valid for 30 days. You can modify this expiration time by changing the `JWT_REFRESH_EXP_DAYS` environment variable in the .env file.
+A refresh token is valid for the time specified in `JWT_REFRESH_EXP_DAYS` environment variable.
 
 ## Authorization
 
 The `Auth` middleware can also be used to require certain rights/permissions to access a route.
 
 ```go
-import (
-	"app/src/controllers"
-	m "app/src/middleware"
-	"app/src/services"
-
-	"github.com/gofiber/fiber/v2"
-)
-
-func SetupRoutes(app *fiber.App, u services.UserService, t services.TokenService) {
-  userController := controllers.NewUserController(u, t)
-	app.Post("/users", m.Auth(u, "manageUsers"), userController.CreateUser)
-}
+app.Post("/users", m.Auth(u, "manageUsers"), userController.CreateUser)
 ```
 
 In the example above, an authenticated user can access this route only if that user has the `manageUsers` permission.
 
 The permissions are role-based. You can view the permissions/rights of each role in the `src/config/roles.go` file.
 
-If the user making the request does not have the required permissions to access this route, a Forbidden (403) error is thrown.
-
 ## Logging
 
 Import the logger from `src/utils/logrus.go`. It is using the [Logrus](https://github.com/sirupsen/logrus) logging library.
 
-Logging should be done according to the following severity levels (ascending order from most important to least important):
-
 ```go
 import "app/src/utils"
 
-utils.Log.Panic('message') // Calls panic() after logging
-utils.Log.Fatal('message'); // Calls os.Exit(1) after logging
 utils.Log.Error('message');
 utils.Log.Warn('message');
 utils.Log.Info('message');
 utils.Log.Debug('message');
-utils.Log.Trace('message');
 ```
 
 > [!NOTE]
 > API request information (request url, response code, timestamp, etc.) are also automatically logged (using [Fiber-Logger](https://docs.gofiber.io/api/middleware/logger)).
 
-## Linting
+## Security Considerations
 
-Linting is done using [golangci-lint](https://golangci-lint.run)
+1. **File Validation**: Selalu validasi file extension dan MIME type
+2. **File Size**: Batasi ukuran file yang dapat diupload
+3. **Authentication**: Semua endpoint memerlukan authentication
+4. **Path Traversal**: File path di-sanitize untuk mencegah path traversal attacks
+5. **Storage Permissions**: Pastikan direktori storage memiliki permissions yang tepat
 
-See 👉 [How to install golangci-lint](https://golangci-lint.run/welcome/install)
+## Troubleshooting
 
-To modify the golangci-lint configuration, update the `.golangci.yml` file.
+### Common Issues
 
-## Contributing
+1. **Permission Denied (Local Storage)**
+   - Pastikan direktori `STORAGE_LOCAL_PATH` memiliki write permissions
+   - Pastikan user yang menjalankan aplikasi memiliki akses ke direktori
 
-Contributions are more than welcome! Please check out the [contributing guide](CONTRIBUTING.md).
+2. **MinIO Connection Failed**
+   - Pastikan MinIO server berjalan
+   - Periksa `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, dan `MINIO_SECRET_KEY`
+   - Pastikan bucket sudah dibuat
 
-If you find this boilerplate useful, consider giving it a star! ⭐
+3. **File Not Found**
+   - Periksa path file di database
+   - Pastikan file masih ada di storage
 
-## Inspirations
-
-- [hagopj13/node-express-boilerplate](https://github.com/hagopj13/node-express-boilerplate)
-- [khannedy/golang-clean-architecture](https://github.com/khannedy/golang-clean-architecture)
-- [zexoverz/express-prisma-template](https://github.com/zexoverz/express-prisma-template)
-
-## License
-
-[MIT](LICENSE)
-
-## Contributors
-
-[![Contributors](https://contrib.rocks/image?c=6&repo=indrayyana/go-fiber-boilerplate)](https://github.com/indrayyana/go-fiber-boilerplate/graphs/contributors)
+4. **Upload Failed**
+   - Periksa ukuran file tidak melebihi limit
+   - Pastikan file extension diizinkan
+   - Periksa space disk yang tersedia

@@ -55,6 +55,11 @@ func main() {
 func setupFiberApp() *fiber.App {
 	app := fiber.New(config.FiberConfig())
 
+	// Static files middleware for local storage
+	if config.StorageType == "local" {
+		app.Static("/uploads", config.StorageLocalPath)
+	}
+
 	// Middleware setup
 	app.Use("/v1/auth", middleware.LimiterConfig())
 	app.Use(middleware.LoggerConfig())
