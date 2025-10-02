@@ -33,6 +33,7 @@ func NewUserController(userService service.UserService, tokenService service.Tok
 // @Param        search     query     string  false  "Search by name or email or role"
 // @Param        start_date query     string  false  "Filter by start date (YYYY-MM-DD)"
 // @Param        end_date   query     string  false  "Filter by end date (YYYY-MM-DD)"
+// @Param        sort_order query     string  false  "Sort order for results (asc or desc)"  default(ASC)  Enums(ASC, DESC)
 // @Router       /users/paginated [get]
 // @Success      200  {object}  example.GetAllUserResponse
 func (u *UserController) GetUsersWithPagination(c *fiber.Ctx) error {

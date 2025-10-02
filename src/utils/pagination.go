@@ -15,6 +15,7 @@ type PaginationParams struct {
 	Search    string  `json:"search,omitempty" validate:"omitempty,max=100"`
 	StartDate *string `json:"start_date,omitempty"`
 	EndDate   *string `json:"end_date,omitempty"`
+	SortOrder string  `json:"sort_order,omitempty" validate:"omitempty,oneof=asc desc ASC DESC"`
 }
 
 // PaginationResult holds the result of pagination
@@ -72,8 +73,11 @@ func ApplyPagination[T any](db *gorm.DB, params *PaginationParams, dateField str
 		return nil, err
 	}
 
+	// Determine sort order using helper function
+	sortOrder := NormalizeSortOrder(params.SortOrder)
+
 	// Apply pagination and get results
-	if err := dataQuery.Limit(params.Limit).Offset(offset).Order(dateField + " ASC").Find(&results).Error; err != nil {
+	if err := dataQuery.Limit(params.Limit).Offset(offset).Order(dateField + " " + sortOrder).Find(&results).Error; err != nil {
 		return nil, err
 	}
 
@@ -94,12 +98,25 @@ func ParseDate(dateStr string) (time.Time, error) {
 	return time.Parse("2006-01-02", dateStr)
 }
 
+// NormalizeSortOrder normalizes sort order string to uppercase ASC or DESC
+func NormalizeSortOrder(sortOrder string) string {
+	switch sortOrder {
+	case "desc", "DESC":
+		return "DESC"
+	case "asc", "ASC", "":
+		return "ASC"
+	default:
+		return "ASC"
+	}
+}
+
 // ExtractPaginationParams extracts pagination parameters from Fiber context
 func ExtractPaginationParams(c *fiber.Ctx) *PaginationParams {
 	params := &PaginationParams{
-		Page:   c.QueryInt("page", 1),
-		Limit:  c.QueryInt("limit", 10),
-		Search: c.Query("search", ""),
+		Page:      c.QueryInt("page", 1),
+		Limit:     c.QueryInt("limit", 10),
+		Search:    c.Query("search", ""),
+		SortOrder: c.Query("sort_order", "ASC"),
 	}
 
 	// Extract date filters
@@ -225,8 +242,95 @@ func ApplyPaginationWithSearch[T any](
 		return nil, err
 	}
 
+	// Determine sort order using helper function
+	sortOrder := NormalizeSortOrder(params.SortOrder)
+
 	// Apply pagination and get results
-	if err := query.Limit(params.Limit).Offset(offset).Order(dateField + " ASC").Find(&results).Error; err != nil {
+	if err := query.Limit(params.Limit).Offset(offset).Order(dateField + " " + sortOrder).Find(&results).Error; err != nil {
+		return nil, err
+	}
+
+	// Calculate total pages
+	totalPages := int64(math.Ceil(float64(totalResults) / float64(params.Limit)))
+
+	return &PaginationResult[T]{
+		Results:      results,
+		Page:         params.Page,
+		Limit:        params.Limit,
+		TotalPages:   totalPages,
+		TotalResults: totalResults,
+	}, nil
+}
+
+// ApplyPaginationWithSearchAndPreload applies pagination with custom search function and preload
+func ApplyPaginationWithSearchAndPreload[T any](
+	db *gorm.DB,
+	params *PaginationParams,
+	dateField string,
+	searchCallback func(*gorm.DB, string) *gorm.DB,
+	preloads []string,
+) (*PaginationResult[T], error) {
+	var results []T
+	var totalResults int64
+
+	// Set default values
+	if params.Page <= 0 {
+		params.Page = 1
+	}
+	if params.Limit <= 0 {
+		params.Limit = 10
+	}
+
+	// Calculate offset
+	offset := (params.Page - 1) * params.Limit
+
+	// Create base query for counting
+	countQuery := db.Model(new(T))
+	// Create base query for data
+	dataQuery := db.Model(new(T))
+
+	// Apply search callback if provided and search term exists
+	if searchCallback != nil && params.Search != "" {
+		countQuery = searchCallback(countQuery, params.Search)
+		dataQuery = searchCallback(dataQuery, params.Search)
+	}
+
+	// Apply date filtering if provided
+	if params.StartDate != nil && *params.StartDate != "" {
+		startDate, err := ParseDate(*params.StartDate)
+		if err != nil {
+			return nil, fiber.NewError(fiber.StatusBadRequest, "Invalid start_date format. Use YYYY-MM-DD")
+		}
+		countQuery = countQuery.Where(dateField+" >= ?", startDate)
+		dataQuery = dataQuery.Where(dateField+" >= ?", startDate)
+	}
+
+	if params.EndDate != nil && *params.EndDate != "" {
+		endDate, err := ParseDate(*params.EndDate)
+		if err != nil {
+			return nil, fiber.NewError(fiber.StatusBadRequest, "Invalid end_date format. Use YYYY-MM-DD")
+		}
+		// Add 24 hours to include the entire end date
+		endDate = endDate.Add(24 * time.Hour)
+		countQuery = countQuery.Where(dateField+" < ?", endDate)
+		dataQuery = dataQuery.Where(dateField+" < ?", endDate)
+	}
+
+	// Count total results
+	if err := countQuery.Count(&totalResults).Error; err != nil {
+		return nil, err
+	}
+
+	// Apply preloads to data query
+	for _, preload := range preloads {
+		dataQuery = dataQuery.Preload(preload)
+	}
+
+	// Determine sort order using helper function
+	sortOrder := NormalizeSortOrder(params.SortOrder)
+
+	// Apply pagination and get results
+	if err := dataQuery.Limit(params.Limit).Offset(offset).Order(dateField + " " + sortOrder).Find(&results).Error; err != nil {
 		return nil, err
 	}
 

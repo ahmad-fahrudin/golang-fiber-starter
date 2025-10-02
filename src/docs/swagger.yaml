@@ -705,6 +705,14 @@ paths:
         in: query
         name: end_date
         type: string
+      - default: ASC
+        description: Sort order for results (asc or desc)
+        enum:
+        - ASC
+        - DESC
+        in: query
+        name: sort_order
+        type: string
       produces:
       - application/json
       responses:
